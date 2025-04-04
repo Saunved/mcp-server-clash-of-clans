@@ -328,6 +328,51 @@ server.tool(
     }
 );
 
+server.tool(
+    "get-capital-raids",
+    { 
+        tag: z.string().describe("Clan tag (with or without #)"),
+        limit: z.number().optional().default(10).describe("Number of capital raid seasons to retrieve (max allowed by API)"),
+        before: z.string().optional().describe("Pagination token to fetch records before a certain point"),
+        after: z.string().optional().describe("Pagination token to fetch records after a certain point")
+    },
+    async ({ tag, limit, before, after }) => {
+        try {
+            // Format clan tag correctly
+            const formattedTag = encodeURIComponent(tag.startsWith('#') ? tag : `#${tag}`);
+            
+            // Build the query parameters
+            let queryParams = [`limit=${limit}`];
+            
+            // Add pagination parameters if provided
+            if (before) {
+                queryParams.push(`before=${encodeURIComponent(before)}`);
+            } else if (after) {
+                queryParams.push(`after=${encodeURIComponent(after)}`);
+            }
+            
+            // Fetch capital raid seasons data
+            const raidData = await fetchClashAPI(`/clans/${formattedTag}/capitalraidseasons?${queryParams.join('&')}`);
+
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify(raidData, null, 2)
+                }]
+            };
+        } catch (error) {
+            console.error("Error fetching capital raid seasons data:", error);
+            return {
+                content: [{
+                    type: "text",
+                    text: `Error retrieving capital raid seasons data: ${error.message}`
+                }],
+                isError: true
+            };
+        }
+    }
+);
+
 server.prompt(
     "analyze-current-war",
     { tag: String },
@@ -446,6 +491,33 @@ server.prompt(
   9. Comparison to typical clans of similar level
   
   Based on this data, provide an overall assessment of the clan's strengths and potential areas for improvement.`
+            }
+        }]
+    })
+);
+
+server.prompt(
+    "analyze-capital-raids",
+    { 
+        tag: String,
+        seasons: z.number().optional().default(3).describe("Number of recent seasons to analyze")
+    },
+    ({ tag, seasons }) => ({
+        messages: [{
+            role: "user",
+            content: {
+                type: "text",
+                text: `Please analyze the Clan Capital raid performance for clan ${tag} over the last ${seasons} seasons. Include:
+
+1. Overall raid statistics (total loot earned, raids completed, number of attacks used)
+2. Offensive performance metrics (districts destroyed, average attacks per district)
+3. Defensive performance assessment (districts lost, average enemy attacks needed)
+4. Member participation analysis (most active members, attack utilization)
+5. Weekend-by-weekend trend analysis
+6. Loot efficiency (average capital gold per attack)
+7. Recommendations for improvement based on the data
+
+This analysis will help the clan understand their Capital raid strengths and weaknesses, and identify areas for improvement.`
             }
         }]
     })
