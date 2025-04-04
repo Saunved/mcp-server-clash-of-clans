@@ -264,6 +264,124 @@ server.tool(
     }
 );
 
+server.tool(
+    "get-current-war",
+    { tag: z.string().describe("Clan tag (with or without #)") },
+    async ({ tag }) => {
+        try {
+            // Format clan tag correctly
+            const formattedTag = encodeURIComponent(tag.startsWith('#') ? tag : `#${tag}`);
+            
+            // Fetch current war data
+            const warData = await fetchClashAPI(`/clans/${formattedTag}/currentwar`);
+
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify(warData, null, 2)
+                }]
+            };
+        } catch (error) {
+            console.error("Error fetching current war data:", error);
+            return {
+                content: [{
+                    type: "text",
+                    text: `Error retrieving current war data: ${error.message}`
+                }],
+                isError: true
+            };
+        }
+    }
+);
+
+server.tool(
+    "get-war-log",
+    { 
+        tag: z.string().describe("Clan tag (with or without #)"),
+        limit: z.number().optional().default(10).describe("Number of war log entries to retrieve (max allowed by API)")
+    },
+    async ({ tag, limit }) => {
+        try {
+            // Format clan tag correctly
+            const formattedTag = encodeURIComponent(tag.startsWith('#') ? tag : `#${tag}`);
+            
+            // Fetch war log data
+            // Note: The Clash API only returns a limited number of most recent wars
+            const warLogData = await fetchClashAPI(`/clans/${formattedTag}/warlog?limit=${limit}`);
+
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify(warLogData, null, 2)
+                }]
+            };
+        } catch (error) {
+            console.error("Error fetching war log data:", error);
+            return {
+                content: [{
+                    type: "text",
+                    text: `Error retrieving war log data: ${error.message}`
+                }],
+                isError: true
+            };
+        }
+    }
+);
+
+server.prompt(
+    "analyze-current-war",
+    { tag: String },
+    ({ tag }) => ({
+        messages: [{
+            role: "user",
+            content: {
+                type: "text",
+                text: `Please analyze the current clan war for clan ${tag}. Include:
+
+1. War overview (clan vs opponent, size, start/end time)
+2. Current war status (preparation, in war, ended)
+3. Current score comparison (stars and destruction percentage)
+4. Attack statistics for both clans (attacks used, average stars)
+5. Remaining attacks and potential maximum stars
+6. Best performing members so far
+7. Town Hall level distribution comparison
+8. Strategic recommendations based on the current situation
+
+If the war is in preparation phase, focus on the matchup analysis and strategic recommendations based on the lineup.`
+            }
+        }]
+    })
+);
+
+server.prompt(
+    "analyze-war-log",
+    { 
+        tag: String,
+        wars: z.number().optional().default(10).describe("Number of recent wars to analyze")
+    },
+    ({ tag, wars }) => ({
+        messages: [{
+            role: "user",
+            content: {
+                type: "text",
+                text: `Please analyze the war log for clan ${tag} using the last ${wars} wars. Include:
+
+1. Overall win-loss record and win percentage
+2. Average stars per war
+3. Average destruction percentage
+4. War size distribution (frequency of different war sizes)
+5. Performance trends (improving, declining, or stable)
+6. Typical war strategy insights (based on attack patterns)
+7. Toughest opponents faced
+8. Most dominant victories
+9. Recommendations for improving war performance
+
+This analysis should help the clan understand their war performance over time and identify areas for improvement.`
+            }
+        }]
+    })
+);
+
 server.prompt(
     "analyze-cwl-war",
     {
