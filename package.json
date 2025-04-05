@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-clash-of-clans",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server implementation for the Clash of Clans API",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "bin": {
     "mcp-server-clash-of-clans": "./index.js"
-  },  
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
