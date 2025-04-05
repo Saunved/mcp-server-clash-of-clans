@@ -53,7 +53,7 @@ class Cache {
 // Create the MCP server
 const server = new McpServer({
     name: "Clash of Clans API",
-    version: "1.0.0"
+    version: "1.0.1"
 });
 
 // Helper function to fetch data from Clash API
