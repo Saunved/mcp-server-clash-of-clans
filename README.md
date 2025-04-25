@@ -1,3 +1,5 @@
+[![MseeP Badge](https://mseep.net/pr/saunved-mcp-server-clash-of-clans-badge.jpg)](https://mseep.ai/app/saunved-mcp-server-clash-of-clans)
+
 Clash of Clans MCP server!
 
 For usage with Claude Desktop, you can update the `claude_desktop_config.json` file to register this server.
